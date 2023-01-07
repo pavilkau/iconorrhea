@@ -1,14 +1,19 @@
 package files
 
 import (
+	"log"
 	"os"
+	"path/filepath"
 	"time"
 )
 
 type File struct {
 	Name    string
+	File    []byte
 	Size    int64
 	ModTime time.Time
+	// Seen    bool
+	// SeenAt  time.Time
 }
 
 func Scan(path string) (files []File, err error) {
@@ -18,8 +23,14 @@ func Scan(path string) (files []File, err error) {
 	}
 
 	for _, rawFile := range rawFiles {
-		info, _ := rawFile.Info()
-		newFile := File{info.Name(), info.Size(), info.ModTime()}
+		fileInfo, _ := rawFile.Info()
+		file, err := os.ReadFile(filepath.Join(path, fileInfo.Name()))
+		if err != nil {
+			log.Printf("failed to read file: %s", err)
+			continue
+		}
+
+		newFile := File{fileInfo.Name(), file, fileInfo.Size(), fileInfo.ModTime()}
 		files = append(files, newFile)
 	}
 
